@@ -23,7 +23,7 @@ class DQN(object):
 
         self.memory = deque(maxlen=2000)
 
-        self.model = self._build_model()
+        self.model = self._build_model_linear()
 
 
     def _build_model(self):
