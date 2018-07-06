@@ -23,33 +23,33 @@ class DQN(object):
 
         self.memory = deque(maxlen=2000)
 
-        self.model = self._build_model_linear()
+        #self.model = self._build_model_linear()
 
 
-    def _build_model(self):
-        """ From Mnih et al. "Playing atari with deep reinforcement learning." 2013. """
-        model = Sequential()
+    # def _build_model(self):
+    #     """ From Mnih et al. "Playing atari with deep reinforcement learning." 2013. """
+    #     model = Sequential()
 
-        model.add(Convolution2D(32,(8,8), strides=(4,4), activation='relu',
-                                input_shape=self.state_size))
-        model.add(Convolution2D(64,(4,4), strides=(2,2), activation='relu'))
-        model.add(Convolution2D(64,(3,3), activation='relu'))
+    #     model.add(Convolution2D(32,(8,8), strides=(4,4), activation='relu',
+    #                             input_shape=self.state_size))
+    #     model.add(Convolution2D(64,(4,4), strides=(2,2), activation='relu'))
+    #     model.add(Convolution2D(64,(3,3), activation='relu'))
 
-        model.add(Flatten())
-        model.add(Dense(512, activation='relu', input_dim=self.state_size))
-        model.add(Dense(self.action_size, activation='linear'))
+    #     model.add(Flatten())
+    #     model.add(Dense(512, activation='relu', input_dim=self.state_size))
+    #     model.add(Dense(self.action_size, activation='linear'))
 
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+    #     model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
 
-        return model
+    #     return model
 
-    def _build_model_linear(self):
-        model = Sequential()
-        model.add(Dense(24, activation='relu', input_dim=self.state_size))
-        model.add(Dense(24, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
-        return model
+    # def _build_model_linear(self):
+    #     model = Sequential()
+    #     model.add(Dense(24, activation='relu', input_dim=self.state_size))
+    #     model.add(Dense(24, activation='relu'))
+    #     model.add(Dense(self.action_size, activation='linear'))
+    #     model.compile(loss='mse', optimizer=Adam(lr=self.learning_rate))
+    #     return model
 
     def load(file, training):
         # Load model from file
