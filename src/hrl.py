@@ -10,6 +10,14 @@ import numpy as np
 from algorithms.DQN import DQN
 
 
+"""TODO:
+1. Add new build_network() because we have parameterized q values now...
+2. Need to sample differently based on tau. Write function to grab samples (paths)
+3. Optimize storage and random access with numpy
+4. Create heuristics
+5. Parallelize code by running heuristic on separate process (or thread with cython)
+"""
+
 """
 1. Get batch()
 2. extract rewards, terminals, obs, actions, next_obs, goals, steps_left(tau)
