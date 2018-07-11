@@ -14,8 +14,8 @@ class Q(nn.Module):
 
 
     def forward(self, *x):
-        x = torch.cat(x, dim=1)
+        x = torch.cat(x)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-        return torch.tensor(x, dtype=torch.float)
+        return torch.tensor(x, requires_grad=True)
