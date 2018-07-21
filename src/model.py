@@ -6,7 +6,8 @@ import torch.optim as optim
 
 class Q(nn.Module):
     def __init__(self, input_size, action_size, lr):
-        super().__init__()
+        # super().__init__()
+        super(Q, self).__init__()
         self.lr = lr
         self.fc1 = nn.Linear(input_size, 24)
         self.fc2 = nn.Linear(24, 24)
