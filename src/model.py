@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 
 
 class Q(nn.Module):
@@ -13,9 +12,9 @@ class Q(nn.Module):
         self.fc2 = nn.Linear(24, 24)
         self.fc3 = nn.Linear(24, action_size)
 
-
     def forward(self, *x):
-        x = torch.cat(x)
+        print x
+        x = torch.cat(x, dim=1)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
