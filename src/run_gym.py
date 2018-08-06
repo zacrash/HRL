@@ -13,20 +13,20 @@ def run():
     action_size = env.action_space.n
     agent = HRL(state_size, action_size)
 
-    timesteps = 10
+    horizon = 20
 
     for e in range(agent.episodes):
-        state = env.reset()
-        goal = [0.0, 0.0, 0.0, 0.0]
+        state = torch.tensor(env.reset(), dtype=torch.float)
+        goal = torch.tensor([0.0, 0.0, 0.0, 0.0], dtype=torch.float)
         score = 0
 
         # Rollout
-        for t in range(timesteps):
+        for t in range(horizon):
             score += 1
-            # env.render()
-            action = agent.act(state, goal, timesteps-t)
+            env.render()
+            action = agent.act(state, goal, torch.tensor([horizon-t], dtype=torch.float))
             next_state, _, done, _ = env.step(action)
-            agent.remember(state, action, next_state, goal, timesteps-t, done)
+            agent.remember(state, action, next_state, None, None, done)
             agent.augment_goals(state, action, next_state, done)
             state = next_state
             if done:

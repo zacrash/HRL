@@ -5,15 +5,15 @@ from collections import deque
 import numpy as np
 
 import torch
-from model import Q
+torch.set_default_tensor_type('torch.FloatTensor')
 import torch.optim as optim
 import torch.nn as nn
-torch.set_default_tensor_type('torch.FloatTensor')
+
+from model import Q
 
 
 class HRL:
-    """Subclass of DQN to use heuristics to improve sample efficiency"""
-    # Just 1 because we are using an int
+
     tau_size = 1
     
     def __init__(self, state_size, action_size, max_tau=5):
@@ -27,29 +27,38 @@ class HRL:
         self.episodes = 1000
         self.epsilon = 1.0
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.995
+        self.epsilon_decay = 0.999
         self.model = Q(self.state_size + self.goal_size + self.tau_size, action_size, self.lr)
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.model.lr)
-        # self.loss = nn.SmoothL1Loss()
-        self.loss = nn.MSELoss()
+        self.loss = nn.SmoothL1Loss()
+        #self.loss = nn.MSELoss()
         self.memory = deque(maxlen=2000)
-        self.tau = self.max_tau
         self.k = 4
         self.n = 2
 
-    @staticmethod
-    def load(file, training):
-        """Load pretrained model from file"""
+    def load(self, model_file):
+        """Load pre-trained model from file"""
         # TODO (@zac): Implement this for PyTorch
-        self.model = load_model()
+        self.model.load_state_dict(torch.load(model_file))
+
+    def save(self, model_file):
+        """Save model parameters"""
+        torch.save(self.model.state_dict(), model_file)
 
     def remember(self, state, action, next_state, goal, tau, done):
         """Append step to memory"""
-        state = torch.tensor(state)
-        action = torch.tensor(action)
-        next_state = torch.tensor(next_state)
-        goal = torch.tensor(goal)
-        tau = torch.tensor(tau)
+        state = torch.tensor(state, dtype=torch.float)
+        action = torch.tensor(action, dtype=torch.float)
+        next_state = torch.tensor(next_state, dtype=torch.float)
+        if goal is None and tau is None:
+            if len(self.memory) <= 1:
+                goal = next_state
+                tau = 0
+            else:
+                goal = self.memory[np.random.randint(0, len(self.memory) - 1)][0]
+                tau = np.random.randint(0, self.max_tau)
+        goal = torch.tensor(goal, dtype=torch.float)
+        tau = torch.tensor([tau], dtype=torch.float)
         self.memory.append([state, action, next_state, goal, tau, done])
 
     def act(self, state, goal, tau):
@@ -58,6 +67,8 @@ class HRL:
         goal = torch.tensor(goal, dtype=torch.float)
         # Epsilon-greedy
         if np.random.rand() <= self.epsilon:
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
             return random.randrange(self.action_size)
         action_values = self.model(state, goal, tau).detach().numpy()
         # Epsilon decay
@@ -65,25 +76,31 @@ class HRL:
             self.epsilon *= self.epsilon_decay
         return np.argmax(action_values[0])
 
-    # TODO (@zac): Make this replay function according to your algorithm
+    # TODO (@zac): state_action_values = policy_net(state_batch).gather(1, action_batch) -> CLEAN!
     def replay(self):
         """Experience replay with a heuristic"""
         minibatch = self._get_minibatch()
         for state, action, next_state, goal, tau, done in minibatch:
-            target = -1 * self.h(state, goal) * (tau==0) + self.model(next_state, goal, tau-1) * (tau!=0)
-            predicted = self.model(state, goal, tau)
+            # target = -1 * self.h(state, goal) * (int(tau)==0) + torch.max(self.model(next_state, goal, tau-1)) * (int(tau)!=0)
+            if int(tau) == 0:
+                target = -1 * self.h(state, goal)
+            else:
+                target = torch.max(self.model(next_state, goal, tau-1))
+            predicted = torch.max(self.model(state, goal, tau))
 
             # Update network
             self.optimizer.zero_grad()
-            output = self.loss(predicted, target)
+            output = self.loss(predicted, target.detach())
             output.backward()
             self.optimizer.step()
 
     def augment_goals(self, state, action, next_state, done):
         """Sample a goal and tau"""
+        if len(self.memory) <= 1:
+            return
         tau = np.random.randint(0, self.max_tau)
         # Goal is sampled from a state a random number of steps after present (note, present in deque is right-most)
-        goal = self.memory[np.random.randint(len(self.memory)-1, 0)][0]
+        goal = self.memory[np.random.randint(0, len(self.memory)-1)][0]
         self.remember(state, action, next_state, goal, tau, done)
 
     def get_model(self):
@@ -100,4 +117,4 @@ class HRL:
     @staticmethod
     def h(state, goal):
         """Heuristic for reach goal from state"""
-        return abs(state[2]*180/math.pi - goal[2]*180/math.pi)
+        return torch.tensor(abs(state[2]*180/math.pi - goal[2]*180/math.pi), dtype=torch.float)
