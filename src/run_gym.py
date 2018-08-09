@@ -13,30 +13,30 @@ def run():
     action_size = env.action_space.n
     agent = HRL(state_size, action_size)
 
-    horizon = 20
-
     for e in range(agent.episodes):
         state = torch.tensor(env.reset(), dtype=torch.float)
-        goal = torch.tensor([0.0, 0.0, 0.0, 0.0], dtype=torch.float)
         score = 0
-
+        done = False
         # Rollout
-        for t in range(horizon):
+        for t in range(400):
             score += 1
             env.render()
-            action = agent.act(state, goal, torch.tensor([horizon-t], dtype=torch.float))
-            next_state, _, done, _ = env.step(action)
-            agent.remember(state, action, next_state, None, None, done)
-            agent.augment_goals(state, action, next_state, done)
+            action = agent.act(state)
+            next_state, reward, done, _ = env.step(action)
+            reward = reward if not done else 0
+            agent.remember(state, action, reward, next_state, done)
+            agent.replay()
+            # agent.augment_goals(state, action, next_state, done)
             state = next_state
             if done:
                 print("episode: {}/{}, score: {}, e: {:.2}".format(
                     e, agent.episodes, score, agent.epsilon))
                 break
 
+
         # Perform optimization
-        for _ in range(agent.n):
-            agent.replay()
+        #for _ in range(agent.n):
+
 
 
 if __name__ == '__main__':

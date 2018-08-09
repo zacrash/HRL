@@ -8,12 +8,11 @@ class Q(nn.Module):
         # super().__init__()
         super(Q, self).__init__()
         self.lr = lr
-        self.fc1 = nn.Linear(input_size, 100)
-        self.fc2 = nn.Linear(100, 100)
-        self.fc3 = nn.Linear(100, action_size)
+        self.fc1 = nn.Linear(input_size, 24)
+        self.fc2 = nn.Linear(24, 24)
+        self.fc3 = nn.Linear(24, action_size)
 
-    def forward(self, *x):
-        x = torch.cat(x)
+    def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
