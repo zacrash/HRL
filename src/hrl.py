@@ -11,6 +11,8 @@ import torch.nn as nn
 
 from model import Q
 
+import time
+
 
 class HRL:
 
@@ -74,7 +76,8 @@ class HRL:
         # Epsilon decay
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-        return np.argmax(action_values[0])
+        print np.argmax(action_values)
+        return np.argmax(action_values)
 
     # TODO (@zac): state_action_values = policy_net(state_batch).gather(1, action_batch) -> CLEAN!
     def replay(self):
@@ -117,4 +120,7 @@ class HRL:
     @staticmethod
     def h(state, goal):
         """Heuristic for reach goal from state"""
+        # print abs(state[2]*180/math.pi - goal[2]*180/math.pi)**2
+        # print state[2], goal[2]
+        # print
         return torch.tensor(abs(state[2]*180/math.pi - goal[2]*180/math.pi), dtype=torch.float)
